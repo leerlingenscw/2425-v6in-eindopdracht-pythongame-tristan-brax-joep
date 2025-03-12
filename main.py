@@ -12,8 +12,11 @@ pygame.display.set_caption('Braxbuistin')
 clock = pygame.time.Clock()
 FPS = 60
 
+SCROLL_THRESH  = 200
 GRAVITY = 1
 MAX_PLATFORMS = 10
+scroll = 0
+bg_scroll = 0
 
 WHITE = (255, 255, 255)
 
@@ -21,6 +24,10 @@ WHITE = (255, 255, 255)
 jumpy_image = pygame.image.load('Assets/pixil-frame-0.png').convert_alpha()
 bg_image = pygame.image.load('Assets/PygameBG.webp').convert_alpha()
 platform_image = pygame.image.load('Assets/PLATFORM.png').convert_alpha()
+
+def draw_bg(bg_scroll):
+     screen.blit(bg_image, (0, 0 + bg_scroll))
+     screen.blit(bg_image, (0, 0 + bg_scroll))
 
 class Player():
     def __init__(self, x, y):
@@ -33,6 +40,7 @@ class Player():
         self.flip = False
     
     def move(self):
+        scroll = 0
         dx = 0
         dy = 0
 
@@ -64,10 +72,16 @@ class Player():
         if self.rect.bottom + dy > SCREEN_HEIGHT:
             dy = 0
             self.vel_y = -20
+        
+        if self.rect.top <= SCROLL_THRESH:
+            if self.vel_y < 0:
+                scroll = -dy
 
           
         self.rect.x += dx
-        self.rect.y += dy
+        self.rect.y += dy + scroll
+
+        return scroll
 
     def draw(self):
         screen.blit(pygame.transform.flip(self.image, self.flip, False), (self.rect.x -12, self.rect.y -5))
@@ -83,6 +97,12 @@ class Platform(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+
+    def update(self, scroll):
+
+        self.rect.y += scroll
+
+
 
 
 
@@ -104,9 +124,14 @@ while run:
 
     clock.tick(FPS)
     
-    jumpy.move()
+    scroll = jumpy.move()
 
-    screen.blit(bg_image, (0, 0))
+    print(scroll)
+
+    bg_scroll += scroll
+    draw_bg(bg_scroll)
+
+    platform_group.update(scroll)
 
     platform_group.draw(screen)
     jumpy.draw()
